@@ -31,9 +31,9 @@
     "setup:ldraw": "tsx src/cli.ts setup",
     "doctor": "tsx src/cli.ts doctor",
     "typecheck": "npm run build && tsc --noEmit -p tsconfig.json",
-    "test": "npm run build && tsx --test \"tests/*.test.ts\"",
+    "test": "npm run build && tsx --test tests/ldraw.test.ts tests/server.test.ts",
     "pack:check": "npm pack --dry-run",
-    "prepublishOnly": "npm run typecheck && tsx --test \"tests/*.test.ts\""
+    "prepublishOnly": "npm run typecheck && tsx --test tests/ldraw.test.ts tests/server.test.ts"
   },
   "keywords": [
     "mcp",
