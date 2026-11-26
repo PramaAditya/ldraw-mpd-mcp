@@ -18,15 +18,22 @@
     "dist",
     "skills",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
     "dev": "tsx src/cli.ts",
     "setup:ldraw": "tsx src/cli.ts setup",
     "doctor": "tsx src/cli.ts doctor",
-    "test": "npm run build && node --test dist/**/*.test.js",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run build && tsx --test \"tests/*.test.ts\"",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm run typecheck && npm test"
   },
   "keywords": [
     "mcp",
@@ -54,8 +61,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "zod": "^3.25.0"
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

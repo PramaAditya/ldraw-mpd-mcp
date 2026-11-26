@@ -1,8 +1,28 @@
 # ldraw-mpd-mcp
 
+[![CI](https://github.com/PramaAditya/ldraw-mpd-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/PramaAditya/ldraw-mpd-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Node.js >=20](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-6f42c1)](https://modelcontextprotocol.io/)
+
 A **zero-native-dependency** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for building, 3D-rendering, visually verifying, and offline-packing LEGO® LDraw (`.ldr` / `.mpd`) models step-by-step with AI coding agents.
 
 Everything — the Z-buffered 2×-supersampled isometric 3D rasterizer, PNG encoder/decoder/stitcher, DFS building-step engine, sub-build isolator, offline `.mpd` bundler, and official LDraw library installer — runs in pure TypeScript/Node.js with **no Blender, LDView, OpenGL, Python, or native C++ build dependencies**.
+
+---
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A[Instruction Image] --> B[ldraw_lookup_part & ldraw_inspect_part]
+    B --> C[Write Step N in .ldr / .mpd]
+    C --> D[ldraw_render_step / ldraw_verify_step]
+    D -- FAIL + Side-by-Side PNG --> C
+    D -- PASS (Text-Only JSON) --> E{More Steps?}
+    E -- Yes --> B
+    E -- No --> F[ldraw_pack_mpd -> 100% Offline .mpd]
+```
 
 ---
 
@@ -21,7 +41,7 @@ Everything — the Z-buffered 2×-supersampled isometric 3D rasterizer, PNG enco
 
 ### 1. Get the LDraw Parts Library (`.dat` files)
 
-This package does **not** bundle `.dat` part files. You have two options:
+This package does **not** bundle `.dat` part files. Choose either option:
 
 - **Option A — One-command download from LDraw.org (recommended):**
   ```bash
@@ -29,7 +49,7 @@ This package does **not** bundle `.dat` part files. You have two options:
   # Optional: include unofficial LDraw parts too
   npx ldraw-mpd-mcp setup --unofficial
   ```
-  This downloads the official `complete.zip` (~75 MB) from `library.ldraw.org` and extracts it to `~/.ldraw`.
+  Downloads the official `complete.zip` (~75 MB) from `library.ldraw.org` and extracts it to `~/.ldraw`.
 
 - **Option B — Use an existing BrickLink Studio 2.0 / LDraw install:**
   `ldraw-mpd-mcp` automatically searches `LDRAW_DIR`, `~/.ldraw`, BrickLink Studio 2.0 default directories (`C:/Program Files/Studio 2.0/ldraw`, `/Applications/Studio 2.0/ldraw`), and standard system LDraw paths.
@@ -95,18 +115,17 @@ A ready-to-use agent workflow guide (coordinate conventions, 3×3 rotation matri
 
 ---
 
-## Development
+## Development & Publishing
 
 ```bash
 npm install
-npm run build
+npm run typecheck
 npm test
+npm run pack:check
 ```
 
-Run locally against a custom Studio 2.0 library:
-```bash
-LDRAW_DIR="C:/Program Files/Studio 2.0/ldraw" npm run doctor
-```
+- **CI:** Every push and PR runs typechecking, full unit + MCP end-to-end tests, LF shebang verification, tarball inspection across Ubuntu/macOS/Windows on Node 20 & 22, plus `npm audit`.
+- **CD:** Pushing a `v*.*.*` tag triggers [`.github/workflows/release.yml`](./.github/workflows/release.yml), which verifies tag/version parity, smoke-tests the packed tarball in a clean install, publishes to npm with `--provenance`, and creates a GitHub Release. See [CONTRIBUTING.md](./CONTRIBUTING.md) and [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 

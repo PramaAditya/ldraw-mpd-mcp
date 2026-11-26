@@ -4,70 +4,22 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { describe, it } from "node:test";
 import * as zlib from "node:zlib";
-import { LDrawCatalog } from "./catalog.js";
-import { getBuiltinFallbackColors, parseLdConfigLines } from "./colors.js";
-import { LDrawLibrary } from "./library.js";
-import { packLDrawMpdOffline } from "./packer.js";
-import { collectModelSteps, parseMpdDocument } from "./parser.js";
-import { decodePngToRGBA, encodePngRGBA, isPngBuffer, stitchSideBySidePng } from "./png.js";
-import { renderLDrawToPngAndAnalyze } from "./renderer.js";
-import { extractZipBuffer } from "./setup.js";
-
-function createTempFixtureLibrary(): string {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ldraw-mpd-mcp-test-"));
-  fs.mkdirSync(path.join(tmpDir, "parts", "s"), { recursive: true });
-  fs.mkdirSync(path.join(tmpDir, "p"), { recursive: true });
-
-  fs.writeFileSync(
-    path.join(tmpDir, "LDConfig.ldr"),
-    [
-      "0 !COLOUR Red CODE 4 VALUE #C91A09 EDGE #333333",
-      "0 !COLOUR Yellow CODE 14 VALUE #F2CD37 EDGE #333333",
-      "0 !COLOUR White CODE 15 VALUE #FFFFFF EDGE #333333",
-      "0 !COLOUR Trans_Clear CODE 47 VALUE #FCFCFC EDGE #CCCCCC ALPHA 128",
-    ].join("\n")
-  );
-
-  // Simple 20x24x20 box primitive in p/box.dat
-  fs.writeFileSync(
-    path.join(tmpDir, "p", "box.dat"),
-    [
-      "0 Simple Box Primitive",
-      "0 !LDRAW_ORG Primitive",
-      "4 16 -10 0 -10 10 0 -10 10 0 10 -10 0 10",
-      "4 16 -10 24 -10 10 24 -10 10 24 10 -10 24 10",
-      "4 16 -10 0 -10 10 0 -10 10 24 -10 -10 24 -10",
-      "4 16 -10 0 10 10 0 10 10 24 10 -10 24 10",
-      "2 24 -10 0 -10 10 0 -10",
-    ].join("\n")
-  );
-
-  // Subpart referenced via s/
-  fs.writeFileSync(
-    path.join(tmpDir, "parts", "s", "subcap.dat"),
-    [
-      "0 Subcap",
-      "0 !LDRAW_ORG Subpart",
-      "3 16 -10 0 -10 10 0 -10 0 -4 0",
-    ].join("\n")
-  );
-
-  // Part 3005.dat (1x1 Brick) referencing primitive & subpart
-  fs.writeFileSync(
-    path.join(tmpDir, "parts", "3005.dat"),
-    [
-      "0 Brick  1 x  1",
-      "0 Name: 3005.dat",
-      "0 !LDRAW_ORG Part",
-      "0 !CATEGORY Brick",
-      "1 16 0 0 0 1 0 0 0 1 0 0 0 1 box.dat",
-      "1 16 0 0 0 1 0 0 0 1 0 0 0 1 s\\subcap.dat",
-    ].join("\n")
-  );
-
-  fs.writeFileSync(path.join(tmpDir, "parts.lst"), "3005.dat  Brick  1 x  1\n");
-  return tmpDir;
-}
+import {
+  LDrawCatalog,
+  LDrawLibrary,
+  collectModelSteps,
+  decodePngToRGBA,
+  encodePngRGBA,
+  extractZipBuffer,
+  getBuiltinFallbackColors,
+  isPngBuffer,
+  packLDrawMpdOffline,
+  parseLdConfigLines,
+  parseMpdDocument,
+  renderLDrawToPngAndAnalyze,
+  stitchSideBySidePng,
+} from "../dist/index.js";
+import { createTempFixtureLibrary } from "./fixtures.js";
 
 function buildMinimalZip(entries: Array<{ name: string; content: string; deflate?: boolean }>): Buffer {
   const localParts: Buffer[] = [];
@@ -117,7 +69,7 @@ function buildMinimalZip(entries: Array<{ name: string; content: string; deflate
   return Buffer.concat([...localParts, cdBuf, eocd]);
 }
 
-describe("ldraw-mpd-mcp core", () => {
+describe("ldraw-mpd-mcp core engine", () => {
   it("encodes, decodes, and stitches PNG buffers in pure TypeScript", () => {
     const rgba = Buffer.alloc(4 * 4 * 4, 255);
     rgba[0] = 200;
@@ -174,7 +126,6 @@ describe("ldraw-mpd-mcp core", () => {
 
       const doc = parseMpdDocument(mpd);
       const collected = collectModelSteps(doc);
-      // Step 1: main 3005, Step 2: sub step 1, Step 3: sub step 2, Step 4: main step_join
       assert.equal(collected.totalSteps, 4);
 
       const subRender = renderLDrawToPngAndAnalyze(library, mpd, {
@@ -221,7 +172,11 @@ describe("ldraw-mpd-mcp core", () => {
     const tmpOut = fs.mkdtempSync(path.join(os.tmpdir(), "ldraw-zip-test-"));
     try {
       const okZip = buildMinimalZip([
-        { name: "ldraw/LDConfig.ldr", content: "0 !COLOUR Red CODE 4 VALUE #C91A09 EDGE #333333", deflate: true },
+        {
+          name: "ldraw/LDConfig.ldr",
+          content: "0 !COLOUR Red CODE 4 VALUE #C91A09 EDGE #333333",
+          deflate: true,
+        },
         { name: "ldraw/parts/3005.dat", content: "0 Brick 1 x 1\n", deflate: false },
       ]);
 
