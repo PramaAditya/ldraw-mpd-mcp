@@ -1,6 +1,6 @@
 {
   "name": "ldraw-mpd-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Zero-native-dependency MCP server for building, 3D-rendering, visually verifying, and offline-packing LEGO LDraw (.ldr / .mpd) models step-by-step.",
   "type": "module",
   "main": "./dist/index.js",

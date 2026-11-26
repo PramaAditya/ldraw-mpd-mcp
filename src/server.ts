@@ -10,7 +10,7 @@ import { isPngBuffer, stitchSideBySidePng } from "./ldraw/png.js";
 import { renderLDrawToPngAndAnalyze } from "./ldraw/renderer.js";
 import { resolveVisionConfig, verifyStepWithVision } from "./verifier/vision.js";
 
-export const SERVER_VERSION = "0.1.0";
+export const SERVER_VERSION = "0.1.1";
 
 function guessImageMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
